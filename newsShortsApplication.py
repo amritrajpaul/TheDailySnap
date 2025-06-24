@@ -72,8 +72,8 @@ SCOPES = ["https://www.googleapis.com/auth/youtube.upload"]
 CLIENT_SECRETS_FILE = "client_secrets.json"  # put your OAuth2 client_secret here
 TOKEN_FILE = "token.json"
 
-# Aggregated RSS sources (20+ Indian news feeds)
-RSS_SOURCES = {
+# Aggregated RSS sources (Indian and international feeds)
+RSS_SOURCES_INDIAN = {
     "The Hindu (National)":     "https://www.thehindu.com/news/national/?service=rss",
     "The Hindu (Business)":     "https://www.thehindu.com/business/?service=rss",
     "The Hindu (Sport)":        "https://www.thehindu.com/sport/?service=rss",
@@ -98,12 +98,31 @@ RSS_SOURCES = {
     "Financial Express":         "https://www.financialexpress.com/feed/",
     "The Print":                 "https://theprint.in/feed/"
 }
+# End Indian sources
+
+# A selection of reputable international outlets
+RSS_SOURCES_INTERNATIONAL = {
+    "BBC World":         "https://feeds.bbci.co.uk/news/world/rss.xml",
+    "CNN World":         "https://rss.cnn.com/rss/edition_world.rss",
+    "Al Jazeera":        "https://www.aljazeera.com/xml/rss/all.xml",
+    "The Guardian":      "https://www.theguardian.com/world/rss",
+    "Reuters World":     "https://www.reuters.com/world/?feed=RSS",
+    "NYTimes World":     "https://rss.nytimes.com/services/xml/rss/nyt/World.xml"
+}
+
+# Merge all sources together
+RSS_SOURCES = {**RSS_SOURCES_INDIAN, **RSS_SOURCES_INTERNATIONAL}
+
+# How many items to pull from each RSS feed
+RSS_LIMIT = 20
 
 # Output paths
 OUTPUT_DIR = "output_v7_smooth"
 AUDIO_DIR  = os.path.join(OUTPUT_DIR, "audio_segments")
+SEG_DIR    = os.path.join(OUTPUT_DIR, "segments")
 VIDEO_FILE = os.path.join(OUTPUT_DIR, "news_short_v7_smooth.mp4")
 os.makedirs(AUDIO_DIR, exist_ok=True)
+os.makedirs(SEG_DIR, exist_ok=True)
 
 # Video settings
 VIDEO_SIZE = (720, 1280)
@@ -140,7 +159,7 @@ def fetch_rss_feed(url: str, source: str, limit: int = 5) -> List[Article]:
         logger.warning(f"    ✖ {source} failed: {ex}")
         return []
 
-def fetch_all(limit_per_feed: int = 5) -> List[Article]:
+def fetch_all(limit_per_feed: int = RSS_LIMIT) -> List[Article]:
     logger.info("Step 1: Aggregating RSS feeds")
     all_arts: List[Article] = []
     seen = set()
@@ -161,7 +180,7 @@ def fetch_all(limit_per_feed: int = 5) -> List[Article]:
 
 def filter_stage1(articles: List[Article], top_k: int = 50) -> List[Article]:
     logger.info("Phase 1: Semantic filtering via embeddings")
-    seed = "India politics commerce sports technology entertainment"
+    seed = "world India politics commerce sports technology entertainment"
     texts = [seed] + [f"{a['title']} {a['summary']}" for a in articles]
     resp = openai.embeddings.create(model="text-embedding-ada-002", input=texts)
     embs = resp.data
@@ -222,11 +241,13 @@ def craft_script(articles: List[Article]) -> List[str]:
     logger.info("Step 3: Crafting & segmenting John Oliver–style script")
     system_prompt = """
 You are John Oliver, host of Last Week Tonight. Your mission is to inform citizens with clarity and wit,
-never sacrificing factual accuracy or journalistic integrity.
+never sacrificing factual accuracy or journalistic integrity. Ensure each statement is backed by at least
+two sources from the provided list and avoid sensationalism.
 
 Task:
 1) Write one seamless ~45-second monologue covering today's top five pillars: politics, commerce, sports, technology, entertainment.
-2) THEN split that monologue into 5–12 coherent segments for short-form video.
+2) Close with a short summary of the day's overall news climate and a reminder to check multiple outlets.
+3) THEN split that monologue into 5–12 coherent segments for short-form video.
 Return ONLY valid JSON with a single key "segments" whose value is a list of strings.
 """.strip()
 
@@ -359,6 +380,44 @@ def build_video(segments: List[str]):
     logger.info("✅ Video built!")
 
 
+def build_segment_videos(segments: List[str]) -> List[str]:
+    """Create individual short videos for each segment."""
+    logger.info("Step 4b: Building standalone segment videos")
+    paths = []
+    for idx, seg in enumerate(segments):
+        audio_fp = os.path.join(AUDIO_DIR, f"seg{idx}.mp3")
+        generate_audio(seg, audio_fp)
+        aclip = AudioFileClip(audio_fp)
+
+        bg = ImageClip(BACKGROUND_IMAGE).set_duration(aclip.duration).set_fps(FPS).resize(VIDEO_SIZE)
+        text_width = VIDEO_SIZE[0] // 2 - 40
+        txt = TextClip(
+            seg,
+            fontsize=FONT_SIZE,
+            font=FONT,
+            color=TEXT_COLOR,
+            method="caption",
+            size=(text_width, None)
+        ).set_duration(aclip.duration)
+        x_pos = VIDEO_SIZE[0] // 2 + 20
+        y_pos = ((VIDEO_SIZE[1] - txt.h) // 2) - 100
+        txt = txt.set_position((x_pos, y_pos))
+
+        clip = CompositeVideoClip([bg, txt]).set_audio(aclip).set_fps(FPS)
+        out_path = os.path.join(SEG_DIR, f"segment_{idx+1}.mp4")
+        clip.write_videofile(
+            out_path,
+            codec="libx264",
+            audio_codec="aac",
+            fps=FPS,
+            temp_audiofile=os.path.join(SEG_DIR, f"temp{idx}.m4a"),
+            remove_temp=True,
+        )
+        paths.append(out_path)
+    logger.info(f"✅ Created {len(paths)} standalone videos")
+    return paths
+
+
 # ----------- YouTube Upload ------------
 
 def get_youtube_service():
@@ -407,12 +466,15 @@ def upload_video(file_path: str, articles: List[Article]):
 
 def main():
     logger.info("🚀 Starting pipeline")
-    arts_all = fetch_all(limit_per_feed=10)
+    arts_all = fetch_all(limit_per_feed=RSS_LIMIT)
     arts_1   = filter_stage1(arts_all, top_k=50)
     arts_2   = filter_stage2(arts_1, top_k=20)
     segments = craft_script(arts_2)
     build_video(segments)
+    seg_paths = build_segment_videos(segments)
     upload_video(VIDEO_FILE, arts_2)
+    for path in seg_paths:
+        upload_video(path, arts_2)
     logger.info(f"🎬 Completed! Video at {VIDEO_FILE}")
 
 def lambda_handler(event, context):

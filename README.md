@@ -4,13 +4,15 @@ An intelligent news aggregation and video generation system that creates engagin
 
 ## 🚀 Features
 
-- **Smart News Aggregation**: Collects news from 20+ Indian media outlets
+- **Smart News Aggregation**: Collects news from 20+ Indian and international media outlets
 - **AI-Powered Content Analysis**: Uses GPT-4 and embeddings for intelligent news filtering
+- **Editorial Standards**: GPT prompts enforce fact checking and balanced coverage
 - **Multi-Language Support**: Generates content in both English and Hindi (Hinglish)
 - **Automated Video Creation**: Creates vertical videos (720×1280) optimized for social media
 - **YouTube Integration**: Automatic upload to YouTube with proper metadata
 - **Content Management**: Intelligent ranking and categorization of news articles
 - **Parallel Processing**: Optimized for speed with concurrent video processing
+- **Standalone Shorts**: Generates individual segment videos in addition to a daily summary
 
 ## 📋 Prerequisites
 
@@ -74,13 +76,16 @@ newsShortsApp/
 ## 🔧 Configuration
 
 ### RSS Sources
-The application aggregates news from 20+ Indian media outlets including:
+The application aggregates news from 20+ Indian and international outlets including:
 - The Hindu
 - Indian Express
 - Times of India
 - Hindustan Times
 - NDTV
 - Economic Times
+- BBC World
+- CNN World
+- Al Jazeera
 - And more...
 
 ### Content Categories
@@ -110,7 +115,8 @@ python newsShortsApplication.py
 3. **Script Generation**: Creates engaging scripts in English and Hindi
 4. **Audio Generation**: Converts text to speech using OpenAI and Google TTS
 5. **Video Creation**: Generates vertical videos with text overlays
-6. **YouTube Upload**: Automatically uploads videos to YouTube
+6. **Segment Shorts**: Builds individual videos for each news segment
+7. **YouTube Upload**: Automatically uploads videos to YouTube
 
 ### Output
 - English video: `output_v7_smooth/news_short_v7_smooth_en.mp4`
