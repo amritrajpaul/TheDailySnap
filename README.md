@@ -4,13 +4,16 @@ An intelligent news aggregation and video generation system that creates engagin
 
 ## 🚀 Features
 
-- **Smart News Aggregation**: Collects news from 20+ Indian media outlets
+- **Smart News Aggregation**: Collects news from Indian and international outlets
 - **AI-Powered Content Analysis**: Uses GPT-4 and embeddings for intelligent news filtering
-- **Multi-Language Support**: Generates content in both English and Hindi (Hinglish)
+- **International Coverage**: Includes top global sources alongside Indian outlets
+- **Journalistic Integrity**: Prompts enforce factual accuracy and ethical standards
+- **Multi-Language Support**: Generates content in English with optional Hindi voice-over
 - **Automated Video Creation**: Creates vertical videos (720×1280) optimized for social media
 - **YouTube Integration**: Automatic upload to YouTube with proper metadata
 - **Content Management**: Intelligent ranking and categorization of news articles
 - **Parallel Processing**: Optimized for speed with concurrent video processing
+- **Daily Summary Video**: Automatically creates and uploads an end-of-day recap
 
 ## 📋 Prerequisites
 
@@ -78,13 +81,16 @@ TheDailySnap/
 ## 🔧 Configuration
 
 ### RSS Sources
-The application aggregates news from 20+ Indian media outlets including:
+The application aggregates news from Indian and international media outlets including:
 - The Hindu
 - Indian Express
 - Times of India
 - Hindustan Times
 - NDTV
 - Economic Times
+- BBC World
+- CNN
+- Al Jazeera
 - And more...
 
 ### Content Categories
@@ -111,14 +117,15 @@ python -m news_shorts
 ### What the script does:
 1. **News Aggregation**: Fetches latest news from RSS feeds
 2. **Content Analysis**: Uses AI to filter and rank articles
-3. **Script Generation**: Creates engaging scripts in English and Hindi
+3. **Script Generation**: Creates engaging scripts in English (optional Hindi voice-over)
 4. **Audio Generation**: Converts text to speech using OpenAI and Google TTS
 5. **Video Creation**: Generates vertical videos with text overlays
 6. **YouTube Upload**: Automatically uploads videos to YouTube
+7. **Daily Summary**: Creates a brief recap video of the day's stories
 
 ### Output
-- English video: `output_v7_smooth/news_short_v7_smooth_en.mp4`
-- Hindi video: `output_v7_smooth/news_short_v7_smooth_hi.mp4`
+- Main video: `output_v8_global/news_short_v8_global.mp4`
+- Daily summary: `output_v8_global/daily_summary.mp4`
 
 ## ⚙️ Customization
 
