@@ -1,17 +1,18 @@
 #!/usr/bin/env python3
 """
-news_shorts_v7_john_oliver_smooth.py
+news_shorts_v8_global.py
 
-v7 variant refined for smooth topic transitions – now with two-stage GPT + embedding
-filtering, OpenAI TTS, and aggregated RSS from 20+ Indian media outlets, plus
-automated YouTube upload.
+Enhanced pipeline with international and Indian RSS sources, improved editorial
+prompts for journalistic integrity, optional daily summary video generation and
+automatic upload to YouTube.
 
 1) Phase 1: Semantic filter via embeddings (top 50 of all articles).
 2) Phase 2: GPT rates those 50 for newsworthiness (top 20).
-3) GPT crafts a ~45-second John Oliver–style script and segments it.
-4) OpenAI TTS (model="tts-1-hd", voice="alloy").
-5) Sentence-by-segment vertical video (720×1280).
-6) Upload to YouTube.
+3) GPT crafts a ~45-second monologue and splits it into short segments.
+4) GPT can also craft a concise end-of-day summary.
+5) OpenAI TTS (model="tts-1-hd", voice="ash").
+6) Sentence-by-segment vertical video (720×1280).
+7) Upload videos to YouTube.
 """
 
 
@@ -73,7 +74,7 @@ SCOPES = ["https://www.googleapis.com/auth/youtube.upload"]
 CLIENT_SECRETS_FILE = "client_secrets.json"  # put your OAuth2 client_secret here
 TOKEN_FILE = "token.json"
 
-# Aggregated RSS sources (20+ Indian news feeds)
+# Aggregated RSS sources (Indian + international)
 RSS_SOURCES = {
     "The Hindu (National)":     "https://www.thehindu.com/news/national/?service=rss",
     "The Hindu (Business)":     "https://www.thehindu.com/business/?service=rss",
@@ -100,10 +101,23 @@ RSS_SOURCES = {
     "The Print":                 "https://theprint.in/feed/"
 }
 
+# A few international outlets
+RSS_SOURCES.update({
+    "BBC World":            "http://feeds.bbci.co.uk/news/world/rss.xml",
+    "CNN Top Stories":      "http://rss.cnn.com/rss/edition.rss",
+    "Al Jazeera":          "https://www.aljazeera.com/xml/rss/all.xml",
+    "Reuters World":       "https://www.reuters.com/world/rss",
+    "The Guardian":        "https://www.theguardian.com/world/rss",
+})
+
+# How many entries to fetch from each feed
+FEED_LIMIT = 15
+
 # Output paths
-OUTPUT_DIR = "output_v7_smooth"
+OUTPUT_DIR = "output_v8_global"
 AUDIO_DIR  = os.path.join(OUTPUT_DIR, "audio_segments")
-VIDEO_FILE = os.path.join(OUTPUT_DIR, "news_short_v7_smooth.mp4")
+VIDEO_FILE = os.path.join(OUTPUT_DIR, "news_short_v8_global.mp4")
+SUMMARY_FILE = os.path.join(OUTPUT_DIR, "daily_summary.mp4")
 os.makedirs(AUDIO_DIR, exist_ok=True)
 
 # Video settings
@@ -141,7 +155,7 @@ def fetch_rss_feed(url: str, source: str, limit: int = 5) -> List[Article]:
         logger.warning(f"    ✖ {source} failed: {ex}")
         return []
 
-def fetch_all(limit_per_feed: int = 5) -> List[Article]:
+def fetch_all(limit_per_feed: int = FEED_LIMIT) -> List[Article]:
     logger.info("Step 1: Aggregating RSS feeds")
     all_arts: List[Article] = []
     seen = set()
@@ -254,6 +268,29 @@ Return ONLY valid JSON with a single key "segments" whose value is a list of str
         return sent_tokenize(content)
 
 
+# ----------- Daily Summary ------------
+
+def craft_daily_summary(articles: List[Article]) -> str:
+    """Generate a concise, impartial summary of the day's news."""
+    logger.info("Step 3b: Crafting daily summary")
+    system_prompt = (
+        "You are a veteran news editor upholding journalistic integrity. Summarize "
+        "today's most important international and Indian stories in under one minute."
+    )
+    user_msg = "\n".join(
+        f"- {a['title']} ({a['source']})" for a in articles[:20]
+    )
+    resp = openai.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=[{"role": "system", "content": system_prompt},
+                  {"role": "user", "content": user_msg}],
+        temperature=0
+    )
+    summary = resp.choices[0].message.content.strip()
+    logger.info("  ✓ Summary crafted")
+    return summary
+
+
 # ----------- TTS & Video ------------
 
 def generate_audio(text: str, path: str):
@@ -360,6 +397,36 @@ def build_video(segments: List[str]):
     logger.info("✅ Video built!")
 
 
+def build_summary_video(text: str):
+    """Create a short video for the daily summary."""
+    logger.info("Step 4b: Building summary video")
+    audio_fp = os.path.join(AUDIO_DIR, "summary.mp3")
+    generate_audio(text, audio_fp)
+    aclip = AudioFileClip(audio_fp)
+
+    bg = ImageClip(BACKGROUND_IMAGE).set_duration(aclip.duration).set_fps(FPS).resize(VIDEO_SIZE)
+    txt = TextClip(
+        text,
+        fontsize=FONT_SIZE,
+        font=FONT,
+        color=TEXT_COLOR,
+        method="caption",
+        size=(VIDEO_SIZE[0] - 80, None),
+    ).set_duration(aclip.duration).set_position("center")
+
+    final = CompositeVideoClip([bg, txt]).set_audio(aclip)
+    logger.info(f"Writing summary video to {SUMMARY_FILE}")
+    final.write_videofile(
+        SUMMARY_FILE,
+        codec="libx264",
+        audio_codec="aac",
+        fps=FPS,
+        temp_audiofile=os.path.join(OUTPUT_DIR, "temp-audio.m4a"),
+        remove_temp=True,
+    )
+    logger.info("✅ Summary video built!")
+
+
 # ----------- YouTube Upload ------------
 
 def get_youtube_service():
@@ -376,11 +443,11 @@ def get_youtube_service():
             f.write(creds.to_json())
     return build("youtube", "v3", credentials=creds)
 
-def upload_video(file_path: str, articles: List[Article]):
+def upload_video(file_path: str, articles: List[Article], title_prefix: str = "News Shorts"):
     logger.info("Step 5: Uploading to YouTube")
     youtube = get_youtube_service()
     today = datetime.datetime.now().strftime("%Y-%m-%d")
-    title = f"News Shorts {today}"
+    title = f"{title_prefix} {today}"
     # build a short description
     desc = "Sources:\n"
     for art in articles[:10]:
@@ -408,12 +475,17 @@ def upload_video(file_path: str, articles: List[Article]):
 
 def main():
     logger.info("🚀 Starting pipeline")
-    arts_all = fetch_all(limit_per_feed=10)
+    arts_all = fetch_all()
     arts_1   = filter_stage1(arts_all, top_k=50)
     arts_2   = filter_stage2(arts_1, top_k=20)
     segments = craft_script(arts_2)
     build_video(segments)
     upload_video(VIDEO_FILE, arts_2)
+
+    # Daily summary video
+    summary_text = craft_daily_summary(arts_2)
+    build_summary_video(summary_text)
+    upload_video(SUMMARY_FILE, arts_2, title_prefix="News Summary")
     logger.info(f"🎬 Completed! Video at {VIDEO_FILE}")
 
 def lambda_handler(event, context):
