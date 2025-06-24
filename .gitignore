@@ -1,0 +1,22 @@
+# Byte-compiled / cache files
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Environment
+.env
+*.env
+
+# Output and temp files
+output_v7_smooth/
+*.mp3
+*.mp4
+*.m4a
+
+# Credentials and tokens
+client_secrets.json
+token.json
+
+# OS files
+.DS_Store
+Thumbs.db 
