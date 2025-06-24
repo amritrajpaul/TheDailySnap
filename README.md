@@ -45,7 +45,7 @@ An intelligent news aggregation and video generation system that creates engagin
      OPENAI_API_KEY=your_openai_api_key
      GOOGLE_API_KEY=your_google_api_key
      ```
-   - See `env_example.txt` for the required format
+   - See `.env.example` for the required format
 
 5. **Configure Google Cloud TTS**
    - Set up Google Cloud credentials
@@ -61,14 +61,18 @@ An intelligent news aggregation and video generation system that creates engagin
 ## 📁 Project Structure
 
 ```
-newsShortsApp/
-├── newsShortsApplication.py    # Main application script
-├── requirements.txt            # Python dependencies
-├── .env                       # Environment variables (create this)
-├── client_secrets.json        # YouTube API credentials
-├── background_fullframe.png   # Video background image
-├── .gitignore                # Git ignore rules
-└── README.md                 # This file
+TheDailySnap/
+├── news_shorts/               # Package with pipeline
+│   ├── __init__.py
+│   ├── __main__.py            # Run with `python -m news_shorts`
+│   └── pipeline.py            # Core implementation
+├── assets/
+│   └── background_fullframe.png
+├── requirements.txt           # Python dependencies
+├── .env.example               # Environment variables template
+├── client_secrets.json        # YouTube API credentials (not committed)
+├── .gitignore
+└── README.md
 ```
 
 ## 🔧 Configuration
@@ -101,7 +105,7 @@ News is automatically categorized into:
 
 ### Basic Usage
 ```bash
-python newsShortsApplication.py
+python -m news_shorts
 ```
 
 ### What the script does:
