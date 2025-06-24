@@ -47,8 +47,9 @@ from google.auth.transport.requests import Request
 # ---- right after your other imports ----
 from moviepy.editor import CompositeVideoClip, ImageClip
 
-# path to the cartoon+black‐panel background
-BACKGROUND_IMAGE = "background_fullframe.png"
+# path to the cartoon+black-panel background
+MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
+BACKGROUND_IMAGE = os.path.join(MODULE_DIR, "..", "assets", "background_fullframe.png")
 
 # ----------- Configuration ------------
 
