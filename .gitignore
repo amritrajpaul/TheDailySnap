@@ -16,6 +16,7 @@ output_v7_smooth/
 # Credentials and tokens
 client_secrets.json
 token.json
+cron.log
 
 # OS files
 .DS_Store

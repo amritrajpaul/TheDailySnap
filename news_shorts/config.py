@@ -3,6 +3,9 @@ import os
 import time
 from dotenv import load_dotenv
 
+import json
+import tempfile
+
 load_dotenv()
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
@@ -13,14 +16,45 @@ ELEVENLABS_API_KEY = os.getenv("ELEVENLABS_API_KEY")
 ELEVENLABS_VOICE_ID = os.getenv("ELEVENLABS_VOICE_ID")
 USE_ELEVENLABS = bool(ELEVENLABS_API_KEY and ELEVENLABS_VOICE_ID)
 
+# YouTube credentials from environment
+YOUTUBE_CLIENT_ID = os.getenv("YOUTUBE_CLIENT_ID")
+YOUTUBE_CLIENT_SECRET = os.getenv("YOUTUBE_CLIENT_SECRET")
+YOUTUBE_PROJECT_ID = os.getenv("YOUTUBE_PROJECT_ID")
+YOUTUBE_AUTH_URI = os.getenv("YOUTUBE_AUTH_URI")
+YOUTUBE_TOKEN_URI = os.getenv("YOUTUBE_TOKEN_URI")
+YOUTUBE_AUTH_PROVIDER_X509_CERT_URL = os.getenv("YOUTUBE_AUTH_PROVIDER_X509_CERT_URL")
+YOUTUBE_REDIRECT_URIS = os.getenv("YOUTUBE_REDIRECT_URIS")
+YOUTUBE_TOKEN_JSON = os.getenv("YOUTUBE_TOKEN_JSON")
+
 # TTS configuration
 TTS_MODEL = "tts-1-hd"
 TTS_VOICE = "ash"  # sarcastic Indian accent
 SPEEDUP = 1.1  # 10% faster pacing
 
 SCOPES = ["https://www.googleapis.com/auth/youtube.upload"]
-CLIENT_SECRETS_FILE = "client_secrets.json"
-TOKEN_FILE = "token.json"
+CLIENT_SECRETS_FILE = os.path.join(tempfile.gettempdir(), "client_secrets.json")
+TOKEN_FILE = os.path.join(tempfile.gettempdir(), "token.json")
+
+
+def write_client_secrets() -> None:
+    """Create client_secrets.json from environment variables if provided."""
+    if YOUTUBE_CLIENT_ID and YOUTUBE_CLIENT_SECRET:
+        data = {
+            "installed": {
+                "client_id": YOUTUBE_CLIENT_ID,
+                "client_secret": YOUTUBE_CLIENT_SECRET,
+                "project_id": YOUTUBE_PROJECT_ID or "",
+                "auth_uri": YOUTUBE_AUTH_URI or "https://accounts.google.com/o/oauth2/auth",
+                "token_uri": YOUTUBE_TOKEN_URI or "https://oauth2.googleapis.com/token",
+                "auth_provider_x509_cert_url": YOUTUBE_AUTH_PROVIDER_X509_CERT_URL or "https://www.googleapis.com/oauth2/v1/certs",
+                "redirect_uris": YOUTUBE_REDIRECT_URIS.split(",") if YOUTUBE_REDIRECT_URIS else [
+                    "urn:ietf:wg:oauth:2.0:oob",
+                    "http://localhost",
+                ],
+            }
+        }
+        with open(CLIENT_SECRETS_FILE, "w") as f:
+            json.dump(data, f)
 
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 BACKGROUND_IMAGE = os.path.join(MODULE_DIR, "..", "assets", "background_fullframe.png")
