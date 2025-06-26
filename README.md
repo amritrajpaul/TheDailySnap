@@ -9,6 +9,7 @@ An intelligent news aggregation and video generation system that creates engagin
 - **International Coverage**: Includes top global sources alongside Indian outlets
 - **Journalistic Integrity**: Prompts enforce factual accuracy and ethical standards
 - **Multi-Language Support**: Generates content in English with optional Hindi voice-over
+- **Expressive English Voice**: Supports ElevenLabs for more emotive delivery when credentials are provided
 - **Automated Video Creation**: Creates vertical videos (720×1280) optimized for social media
 - **YouTube Integration**: Automatic upload to YouTube with proper metadata
 - **Content Management**: Intelligent ranking and categorization of news articles
@@ -20,6 +21,7 @@ An intelligent news aggregation and video generation system that creates engagin
 - Python 3.8 or higher
 - OpenAI API key
 - Google Cloud credentials (for Hindi TTS)
+- ElevenLabs API key (optional, for expressive English voice)
 - YouTube API credentials
 - FFmpeg (for video processing)
 
@@ -45,8 +47,10 @@ An intelligent news aggregation and video generation system that creates engagin
    - Create a `.env` file in the project root
    - Add your API keys:
      ```
-     OPENAI_API_KEY=your_openai_api_key
-     GOOGLE_API_KEY=your_google_api_key
+    OPENAI_API_KEY=your_openai_api_key
+    GOOGLE_API_KEY=your_google_api_key
+    ELEVENLABS_API_KEY=your_elevenlabs_api_key  # optional
+    ELEVENLABS_VOICE_ID=your_voice_id           # optional
      ```
    - See `.env.example` for the required format
 
@@ -118,7 +122,7 @@ python -m news_shorts
 1. **News Aggregation**: Fetches latest news from RSS feeds
 2. **Content Analysis**: Uses AI to filter and rank articles
 3. **Script Generation**: Creates engaging scripts in English (optional Hindi voice-over)
-4. **Audio Generation**: Converts text to speech using OpenAI and Google TTS
+4. **Audio Generation**: Uses OpenAI or Google TTS by default, switching to ElevenLabs when configured
 5. **Video Creation**: Generates vertical videos with text overlays
 6. **YouTube Upload**: Automatically uploads videos to YouTube
 7. **Daily Summary**: Creates a brief recap video of the day's stories
