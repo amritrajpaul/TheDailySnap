@@ -72,7 +72,14 @@ TheDailySnap/
 ├── news_shorts/               # Package with pipeline
 │   ├── __init__.py
 │   ├── __main__.py            # Run with `python -m news_shorts`
-│   └── pipeline.py            # Core implementation
+│   ├── config.py              # Configuration and constants
+│   ├── rss.py                 # RSS fetching utilities
+│   ├── filtering.py           # Filtering logic
+│   ├── script_gen.py          # GPT based script generation
+│   ├── tts_engine.py          # Text-to-speech helpers
+│   ├── video_builder.py       # Video creation helpers
+│   ├── youtube_client.py      # Upload helper functions
+│   └── pipeline.py            # Orchestration logic
 ├── assets/
 │   └── background_fullframe.png
 ├── requirements.txt           # Python dependencies
