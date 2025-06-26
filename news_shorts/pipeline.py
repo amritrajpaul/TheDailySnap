@@ -64,9 +64,14 @@ if not OPENAI_KEY:
     sys.exit(1)
 openai.api_key = OPENAI_KEY
 
+# Optional ElevenLabs configuration
+ELEVENLABS_API_KEY = os.getenv("ELEVENLABS_API_KEY")
+ELEVENLABS_VOICE_ID = os.getenv("ELEVENLABS_VOICE_ID")
+USE_ELEVENLABS = bool(ELEVENLABS_API_KEY and ELEVENLABS_VOICE_ID)
+
 # TTS settings
 TTS_MODEL = "tts-1-hd"
-TTS_VOICE = "onyx"
+TTS_VOICE = "ash"  # sarcastic Indian accent
 SPEEDUP   = 1.1  # 10% faster pacing
 
 # YouTube upload settings
@@ -235,15 +240,25 @@ def craft_script(articles: List[Article]) -> List[str]:
     2) Split it into 8–12 coherent segments in JSON["segments"].
     """
     logger.info("Step 3: Crafting & segmenting John Oliver–style script")
-    system_prompt = """
+    base_prompt = """
 You are John Oliver, host of Last Week Tonight. Your mission is to inform citizens with clarity and wit,
 never sacrificing factual accuracy or journalistic integrity.
 
 Task:
 1) Write one seamless ~45-second monologue covering today's top five pillars: politics, commerce, sports, technology, entertainment.
-2) THEN split that monologue into 5–12 coherent segments for short-form video.
-Return ONLY valid JSON with a single key "segments" whose value is a list of strings.
 """.strip()
+
+    if USE_ELEVENLABS:
+        extra = (
+            "2) Insert occasional emotion cues in square brackets like [giggle], [sigh] or [excited] so the script is expressive when read aloud by ElevenLabs.\n"
+            "3) THEN split that monologue into 5–12 coherent segments for short-form video."
+        )
+    else:
+        extra = (
+            "2) THEN split that monologue into 5–12 coherent segments for short-form video."
+        )
+
+    system_prompt = base_prompt + "\n" + extra + "\nReturn ONLY valid JSON with a single key \"segments\" whose value is a list of strings."
 
     user_msg = "Here are today's pre-filtered articles:\n" + "\n".join(
         f"- [{a['source']}] {a['title']} — {a['summary']}"
@@ -294,16 +309,48 @@ def craft_daily_summary(articles: List[Article]) -> str:
 # ----------- TTS & Video ------------
 
 def generate_audio(text: str, path: str):
-    logger.info(f"TTS (Ash, sarcastic Indian accent): {text[:30]}…")
-    # Prepend a brief direction so 'Ash' knows to use sarcasm + Indian accent + John Oliver style
-    resp = openai.audio.speech.create(
-        model=TTS_MODEL,
-        voice="ash",                        # ← switched to Ash
-        input=text                        # ← feed it the styled prompt
-    )
-    # save raw TTS output
-    resp.stream_to_file(path)
-    # post-process for pacing
+    """Generate audio for the given text and save it to *path*.
+
+    Prefers ElevenLabs if ELEVENLABS_API_KEY and ELEVENLABS_VOICE_ID are set.
+    Otherwise falls back to OpenAI TTS.
+    """
+    if USE_ELEVENLABS:
+        logger.info(f"TTS (ElevenLabs {ELEVENLABS_VOICE_ID}): {text[:30]}…")
+        url = (
+            f"https://api.elevenlabs.io/v1/text-to-speech/{ELEVENLABS_VOICE_ID}/stream"
+        )
+        headers = {
+            "xi-api-key": ELEVENLABS_API_KEY,
+            "Content-Type": "application/json",
+        }
+        payload = {
+            "text": text,
+            "model_id": "eleven_multilingual_v2",
+            "voice_settings": {
+                "stability": 0.5,
+                "similarity_boost": 0.75,
+                "style": 0,
+                "use_speaker_boost": True,
+            },
+        }
+        resp = requests.post(url, headers=headers, json=payload, stream=True)
+        if not resp.ok:
+            raise RuntimeError(
+                f"ElevenLabs API {resp.status_code}: {resp.text}"[:200]
+            )
+        with open(path, "wb") as f:
+            for chunk in resp.iter_content(chunk_size=8192):
+                if chunk:
+                    f.write(chunk)
+    else:
+        logger.info(f"TTS (OpenAI {TTS_VOICE}): {text[:30]}…")
+        resp = openai.audio.speech.create(
+            model=TTS_MODEL,
+            voice=TTS_VOICE,
+            input=text,
+        )
+        resp.stream_to_file(path)
+
     seg = AudioSegment.from_file(path)
     seg = seg.speedup(playback_speed=SPEEDUP)
     seg.export(path, format="mp3")
