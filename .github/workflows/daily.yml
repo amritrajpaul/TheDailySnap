@@ -1,0 +1,31 @@
+name: Daily News Shorts
+
+on:
+  schedule:
+    - cron: '30 15 * * *'
+  workflow_dispatch:
+
+jobs:
+  run-script:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install -r requirements.txt
+      - name: Run script
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
+          ELEVENLABS_VOICE_ID: ${{ secrets.ELEVENLABS_VOICE_ID }}
+          YOUTUBE_CLIENT_ID: ${{ secrets.YOUTUBE_CLIENT_ID }}
+          YOUTUBE_CLIENT_SECRET: ${{ secrets.YOUTUBE_CLIENT_SECRET }}
+          YOUTUBE_PROJECT_ID: ${{ secrets.YOUTUBE_PROJECT_ID }}
+          YOUTUBE_AUTH_URI: ${{ secrets.YOUTUBE_AUTH_URI }}
+          YOUTUBE_TOKEN_URI: ${{ secrets.YOUTUBE_TOKEN_URI }}
+          YOUTUBE_AUTH_PROVIDER_X509_CERT_URL: ${{ secrets.YOUTUBE_AUTH_PROVIDER_X509_CERT_URL }}
+          YOUTUBE_REDIRECT_URIS: ${{ secrets.YOUTUBE_REDIRECT_URIS }}
+          YOUTUBE_TOKEN_JSON: ${{ secrets.YOUTUBE_TOKEN_JSON }}
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}
+        run: python -m news_shorts
