@@ -1,6 +1,7 @@
 import json
 from typing import List, Dict
 import openai
+import nltk
 from nltk.tokenize import sent_tokenize
 from . import config
 
@@ -8,6 +9,12 @@ Article = Dict[str, str]
 
 if config.OPENAI_KEY:
     openai.api_key = config.OPENAI_KEY
+
+# Ensure NLTK's Punkt tokenizer is available for sentence splitting
+try:
+    nltk.data.find("tokenizers/punkt")
+except LookupError:
+    nltk.download("punkt")
 
 
 def craft_script(articles: List[Article]) -> List[str]:
@@ -27,7 +34,14 @@ def craft_script(articles: List[Article]) -> List[str]:
         extra = (
             "2) THEN split that monologue into 5–12 coherent segments for short-form video."
         )
-    system_prompt = base_prompt + "\n" + extra + "\nReturn ONLY valid JSON with a single key \"segments\" whose value is a list of strings."
+    system_prompt = (
+        base_prompt
+        + "\n"
+        + extra
+        + "\nRespond ONLY with a valid JSON object in this exact format:\n"
+        + '{"segments": ["segment1", "segment2"]}'
+        + "\nDo not include explanations, code fences, or any other text."
+    )
     user_msg = "Here are today's pre-filtered articles:\n" + "\n".join(
         f"- [{a['source']}] {a['title']} — {a['summary']}" for a in articles
     )
@@ -35,6 +49,7 @@ def craft_script(articles: List[Article]) -> List[str]:
         openai.chat.completions.create,
         model="gpt-4o-mini",
         messages=[{"role": "system", "content": system_prompt}, {"role": "user", "content": user_msg}],
+        response_format={"type": "json_object"},
         temperature=0.7,
     )
     content = resp.choices[0].message.content
@@ -63,7 +78,13 @@ def craft_hindi_script(articles: List[Article]) -> List[str]:
         )
     else:
         extra = " Then split the monologue into 5-12 short segments."
-    system_prompt = base_prompt + extra + " Return ONLY JSON with key 'segments'."
+    system_prompt = (
+        base_prompt
+        + extra
+        + " Respond ONLY with a JSON object like:\n"
+        + '{"segments": ["seg1", "seg2"]}'
+        + "\nDo not include explanations, code fences, or extra text."
+    )
     user_msg = "Here are today's articles:\n" + "\n".join(
         f"- [{a['source']}] {a['title']} — {a['summary']}" for a in articles
     )
@@ -71,6 +92,7 @@ def craft_hindi_script(articles: List[Article]) -> List[str]:
         openai.chat.completions.create,
         model="gpt-4o-mini",
         messages=[{"role": "system", "content": system_prompt}, {"role": "user", "content": user_msg}],
+        response_format={"type": "json_object"},
         temperature=0.7,
     )
     content = resp.choices[0].message.content
