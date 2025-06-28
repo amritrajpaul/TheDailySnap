@@ -27,7 +27,7 @@ nltk==3.8.1
 numpy==1.26.4
 oauthlib==3.2.2
 openai==1.76.0
-pillow==10.4.0
+pillow==9.5.0
 proglog==0.1.11
 proto-plus==1.26.1
 protobuf==6.30.2
