@@ -24,6 +24,7 @@ An intelligent news aggregation and video generation system that creates engagin
 - ElevenLabs API key (optional, for expressive English voice)
 - YouTube API credentials
 - FFmpeg (for video processing)
+- ImageMagick (modify /etc/ImageMagick-6/policy.xml to allow read|write for pattern "@*")
 
 ## 🛠️ Installation
 
@@ -42,8 +43,12 @@ An intelligent news aggregation and video generation system that creates engagin
    - **Windows**: Download from [FFmpeg website](https://ffmpeg.org/download.html)
    - **macOS**: `brew install ffmpeg`
    - **Linux**: `sudo apt-get install ffmpeg`
+4. **Install ImageMagick and update policy**
+   - Install ImageMagick (e.g., `sudo apt-get install imagemagick`)
+   - Edit `/etc/ImageMagick-6/policy.xml` and comment out `<policy domain="path" rights="none" pattern="@*"/>` or change `rights` to `read|write`
 
-4. **Set up API credentials**
+
+5. **Set up API credentials**
    - Create a `.env` file in the project root
    - Add your API keys:
      ```
@@ -54,14 +59,14 @@ An intelligent news aggregation and video generation system that creates engagin
      ```
    - See `.env.example` for the required format
 
-5. **Configure Google Cloud TTS**
+6. **Configure Google Cloud TTS**
    - Set up Google Cloud credentials
    - Update the path in the script:
      ```python
      os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "path/to/your/credentials.json"
      ```
 
-6. **Set up YouTube API**
+7. **Set up YouTube API**
    - Download `client_secrets.json` from Google Cloud Console
    - Place it in the project root
 

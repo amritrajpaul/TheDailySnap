@@ -16,6 +16,10 @@ jobs:
       - run: pip install -r requirements.txt
       - run: sudo apt-get update && sudo apt-get install -y ffmpeg
       - run: sudo apt-get install -y imagemagick
+      - name: Update ImageMagick policy
+        run: |
+          sudo sed -i 's#<policy domain="path" rights="none" pattern="@\*"/>#<policy domain="path" rights="read|write" pattern="@*"/>#' /etc/ImageMagick-6/policy.xml
+          sudo pkill -HUP -f convert || true
       - name: Run script
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
