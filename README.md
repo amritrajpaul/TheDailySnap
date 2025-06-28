@@ -14,7 +14,7 @@ An intelligent news aggregation and video generation system that creates engagin
 - **YouTube Integration**: Automatic upload to YouTube with proper metadata
 - **Content Management**: Intelligent ranking and categorization of news articles
 - **Parallel Processing**: Optimized for speed with concurrent video processing
-- **Daily Summary Video**: Automatically creates and uploads an end-of-day recap
+- **Hindi Video**: Generates a second video in Hinglish with Hindi voice-over
 
 ## 📋 Prerequisites
 
@@ -130,13 +130,12 @@ python -m news_shorts
 2. **Content Analysis**: Uses AI to filter and rank articles
 3. **Script Generation**: Creates engaging scripts in English (optional Hindi voice-over)
 4. **Audio Generation**: Uses OpenAI or Google TTS by default, switching to ElevenLabs when configured
-5. **Video Creation**: Generates vertical videos with text overlays
+5. **Video Creation**: Generates vertical videos with text overlays in English and Hindi
 6. **YouTube Upload**: Automatically uploads videos to YouTube
-7. **Daily Summary**: Creates a brief recap video of the day's stories
 
 ### Output
 - Main video: `output_v8_global/news_short_v8_global.mp4`
-- Daily summary: `output_v8_global/daily_summary.mp4`
+- Hindi video: `output_v8_global/news_short_v8_global_hi.mp4`
 
 ## ⚙️ Customization
 

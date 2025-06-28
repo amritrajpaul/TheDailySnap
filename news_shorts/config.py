@@ -96,9 +96,12 @@ FEED_LIMIT = 15
 
 OUTPUT_DIR = "output_v8_global"
 AUDIO_DIR = os.path.join(OUTPUT_DIR, "audio_segments")
+HINDI_AUDIO_DIR = os.path.join(OUTPUT_DIR, "audio_segments_hi")
 VIDEO_FILE = os.path.join(OUTPUT_DIR, "news_short_v8_global.mp4")
+HINDI_VIDEO_FILE = os.path.join(OUTPUT_DIR, "news_short_v8_global_hi.mp4")
 SUMMARY_FILE = os.path.join(OUTPUT_DIR, "daily_summary.mp4")
 os.makedirs(AUDIO_DIR, exist_ok=True)
+os.makedirs(HINDI_AUDIO_DIR, exist_ok=True)
 
 VIDEO_SIZE = (720, 1280)
 FONT = "Arial"
