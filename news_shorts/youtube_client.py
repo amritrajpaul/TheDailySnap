@@ -40,7 +40,11 @@ def get_youtube_service():
                         "redirect_uris": config.YOUTUBE_REDIRECT_URIS.split(",") if config.YOUTUBE_REDIRECT_URIS else ["urn:ietf:wg:oauth:2.0:oob", "http://localhost"],
                     }
                 }
-                tmp = tempfile.NamedTemporaryFile(delete=False, suffix=".json")
+                # NamedTemporaryFile opens in binary mode by default which
+                # causes json.dump() to fail on Python 3. We explicitly open
+                # the file in text mode so json.dump writes str data without
+                # raising a TypeError.
+                tmp = tempfile.NamedTemporaryFile(delete=False, suffix=".json", mode="w", encoding="utf-8")
                 json.dump(data, tmp)
                 tmp.flush()
                 flow = InstalledAppFlow.from_client_secrets_file(tmp.name, config.SCOPES)
