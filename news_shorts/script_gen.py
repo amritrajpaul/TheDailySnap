@@ -49,6 +49,42 @@ def craft_script(articles: List[Article]) -> List[str]:
         return sent_tokenize(content)
 
 
+def craft_hindi_script(articles: List[Article]) -> List[str]:
+    """Craft a Hinglish monologue for Hindi shorts."""
+    config.logger.info("Step 3H: Crafting Hinglish script")
+    base_prompt = (
+        "You are an energetic Hindi news anchor speaking in Hinglish (Hindi using Latin letters)."
+        " Craft a single ~45 second monologue covering today's top stories."
+    )
+    if config.USE_ELEVENLABS:
+        extra = (
+            " Insert emotion cues in square brackets such as [hassna], [dukhi] or [excited] so ElevenLabs delivers with expression."
+            " Then split the monologue into 5-12 short segments."
+        )
+    else:
+        extra = " Then split the monologue into 5-12 short segments."
+    system_prompt = base_prompt + extra + " Return ONLY JSON with key 'segments'."
+    user_msg = "Here are today's articles:\n" + "\n".join(
+        f"- [{a['source']}] {a['title']} — {a['summary']}" for a in articles
+    )
+    resp = config.with_retry(
+        openai.chat.completions.create,
+        model="gpt-4o-mini",
+        messages=[{"role": "system", "content": system_prompt}, {"role": "user", "content": user_msg}],
+        temperature=0.7,
+    )
+    content = resp.choices[0].message.content
+    try:
+        data = json.loads(content)
+        segs = data["segments"]
+        assert isinstance(segs, list) and all(isinstance(s, str) for s in segs)
+        config.logger.info(f"  ✓ GPT returned {len(segs)} Hindi segments")
+        return segs
+    except Exception as e:
+        config.logger.warning(f"Hindi segmentation JSON parse failed ({e}), falling back to sentences")
+        return sent_tokenize(content)
+
+
 def craft_daily_summary(articles: List[Article]) -> str:
     """Generate a concise, impartial summary."""
     config.logger.info("Step 3b: Crafting daily summary")

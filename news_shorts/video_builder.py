@@ -11,12 +11,12 @@ from . import config
 from .tts_engine import generate_audio
 
 
-def build_video(segments: List[str]) -> None:
+def build_video(segments: List[str], *, video_path: str = config.VIDEO_FILE, audio_dir: str = config.AUDIO_DIR) -> None:
     config.logger.info("Step 4: Building video over custom background")
     clips = []
     for idx, seg in enumerate(segments):
         config.logger.info(f"  • Segment {idx + 1}/{len(segments)}")
-        audio_fp = os.path.join(config.AUDIO_DIR, f"seg{idx}.mp3")
+        audio_fp = os.path.join(audio_dir, f"seg{idx}.mp3")
         generate_audio(seg, audio_fp)
         aclip = AudioFileClip(audio_fp)
         bg = ImageClip(config.BACKGROUND_IMAGE).set_duration(aclip.duration).set_fps(config.FPS).resize(config.VIDEO_SIZE)
@@ -34,10 +34,10 @@ def build_video(segments: List[str]) -> None:
         clip = CompositeVideoClip([bg, txt]).set_audio(aclip).set_fps(config.FPS)
         clips.append(clip)
     final = concatenate_videoclips(clips, method="compose")
-    config.logger.info(f"Writing video to {config.VIDEO_FILE}")
+    config.logger.info(f"Writing video to {video_path}")
     config.with_retry(
         final.write_videofile,
-        config.VIDEO_FILE,
+        video_path,
         codec="libx264",
         audio_codec="aac",
         fps=config.FPS,
