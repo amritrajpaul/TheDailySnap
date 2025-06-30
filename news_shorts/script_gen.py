@@ -5,10 +5,33 @@ import nltk
 from nltk.tokenize import sent_tokenize
 from . import config
 
+if config.GEN_AI_PROVIDER == "google":
+    import google.generativeai as genai
+    if config.GOOGLE_API_KEY:
+        genai.configure(api_key=config.GOOGLE_API_KEY)
+    _gen_model = genai.GenerativeModel("gemini-pro")
+
 Article = Dict[str, str]
 
 if config.OPENAI_KEY:
     openai.api_key = config.OPENAI_KEY
+
+
+def _chat(system: str, user: str, *, json_mode: bool = False, temperature: float = 0.7) -> str:
+    """Call the configured LLM and return the response text."""
+    if config.GEN_AI_PROVIDER == "google":
+        prompt = system + "\n" + user
+        resp = config.with_retry(_gen_model.generate_content, prompt)
+        return resp.text
+    params = {
+        "model": "gpt-4o-mini",
+        "messages": [{"role": "system", "content": system}, {"role": "user", "content": user}],
+        "temperature": temperature,
+    }
+    if json_mode:
+        params["response_format"] = {"type": "json_object"}
+    resp = config.with_retry(openai.chat.completions.create, **params)
+    return resp.choices[0].message.content
 
 # Ensure NLTK's Punkt tokenizer is available for sentence splitting
 try:
@@ -45,14 +68,7 @@ def craft_script(articles: List[Article]) -> List[str]:
     user_msg = "Here are today's pre-filtered articles:\n" + "\n".join(
         f"- [{a['source']}] {a['title']} — {a['summary']}" for a in articles
     )
-    resp = config.with_retry(
-        openai.chat.completions.create,
-        model="gpt-4o-mini",
-        messages=[{"role": "system", "content": system_prompt}, {"role": "user", "content": user_msg}],
-        response_format={"type": "json_object"},
-        temperature=0.7,
-    )
-    content = resp.choices[0].message.content
+    content = _chat(system_prompt, user_msg, json_mode=True)
     try:
         data = json.loads(content)
         segs = data["segments"]
@@ -88,14 +104,7 @@ def craft_hindi_script(articles: List[Article]) -> List[str]:
     user_msg = "Here are today's articles:\n" + "\n".join(
         f"- [{a['source']}] {a['title']} — {a['summary']}" for a in articles
     )
-    resp = config.with_retry(
-        openai.chat.completions.create,
-        model="gpt-4o-mini",
-        messages=[{"role": "system", "content": system_prompt}, {"role": "user", "content": user_msg}],
-        response_format={"type": "json_object"},
-        temperature=0.7,
-    )
-    content = resp.choices[0].message.content
+    content = _chat(system_prompt, user_msg, json_mode=True)
     try:
         data = json.loads(content)
         segs = data["segments"]
@@ -114,13 +123,7 @@ def craft_daily_summary(articles: List[Article]) -> str:
         "You are a veteran news editor upholding journalistic integrity. Summarize today's most important international and Indian stories in under one minute."
     )
     user_msg = "\n".join(f"- {a['title']} ({a['source']})" for a in articles[:20])
-    resp = config.with_retry(
-        openai.chat.completions.create,
-        model="gpt-4o-mini",
-        messages=[{"role": "system", "content": system_prompt}, {"role": "user", "content": user_msg}],
-        temperature=0,
-    )
-    summary = resp.choices[0].message.content.strip()
+    summary = _chat(system_prompt, user_msg, temperature=0).strip()
     config.logger.info("  ✓ Summary crafted")
     return summary
 

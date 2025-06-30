@@ -23,6 +23,7 @@ jobs:
       - name: Run script
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
           ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
           ELEVENLABS_VOICE_ID: ${{ secrets.ELEVENLABS_VOICE_ID }}
           YOUTUBE_CLIENT_ID: ${{ secrets.YOUTUBE_CLIENT_ID }}
@@ -34,4 +35,23 @@ jobs:
           YOUTUBE_REDIRECT_URIS: ${{ secrets.YOUTUBE_REDIRECT_URIS }}
           YOUTUBE_TOKEN_JSON: ${{ secrets.YOUTUBE_TOKEN_JSON }}
           GOOGLE_APPLICATION_CREDENTIALS: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}
+          GEN_AI_PROVIDER: ${{ vars.GEN_AI_PROVIDER }}
+          TTS_PROVIDER: ${{ vars.TTS_PROVIDER }}
+          TTS_MODEL: ${{ vars.TTS_MODEL }}
+          TTS_VOICE: ${{ vars.TTS_VOICE }}
+          GOOGLE_TTS_LANGUAGE: ${{ vars.GOOGLE_TTS_LANGUAGE }}
+          SPEEDUP: ${{ vars.SPEEDUP }}
+          VIDEO_LANGUAGES: ${{ vars.VIDEO_LANGUAGES }}
+          UPLOAD_TO_YOUTUBE: ${{ vars.UPLOAD_TO_YOUTUBE }}
+          FEED_LIMIT: ${{ vars.FEED_LIMIT }}
+          OUTPUT_DIR: ${{ vars.OUTPUT_DIR }}
+          FILE_PREFIX: ${{ vars.FILE_PREFIX }}
+          VIDEO_WIDTH: ${{ vars.VIDEO_WIDTH }}
+          VIDEO_HEIGHT: ${{ vars.VIDEO_HEIGHT }}
+          FONT: ${{ vars.FONT }}
+          FONT_SIZE: ${{ vars.FONT_SIZE }}
+          TEXT_COLOR: ${{ vars.TEXT_COLOR }}
+          BG_COLOR: ${{ vars.BG_COLOR }}
+          FPS: ${{ vars.FPS }}
+          RETRY_LIMIT: ${{ vars.RETRY_LIMIT }}
         run: python -m news_shorts

@@ -15,13 +15,18 @@ def main() -> None:
         arts_1 = filter_stage1(arts_all, top_k=50)
         arts_2 = filter_stage2(arts_1, top_k=20)
         segments = craft_script(arts_2)
-        build_video(segments, video_path=config.VIDEO_FILE, audio_dir=config.AUDIO_DIR)
-        upload_video(config.VIDEO_FILE, arts_2)
+        if "en" in config.LANGUAGES:
+            build_video(segments, video_path=config.VIDEO_FILE, audio_dir=config.AUDIO_DIR)
+            if config.UPLOAD_TO_YOUTUBE:
+                upload_video(config.VIDEO_FILE, arts_2)
 
-        h_segments = craft_hindi_script(arts_2)
-        build_video(h_segments, video_path=config.HINDI_VIDEO_FILE, audio_dir=config.HINDI_AUDIO_DIR)
-        upload_video(config.HINDI_VIDEO_FILE, arts_2, title_prefix="News Shorts Hindi")
-        config.logger.info(f"🎬 Completed! Videos at {config.VIDEO_FILE} and {config.HINDI_VIDEO_FILE}")
+        if "hi" in config.LANGUAGES:
+            h_segments = craft_hindi_script(arts_2)
+            build_video(h_segments, video_path=config.HINDI_VIDEO_FILE, audio_dir=config.HINDI_AUDIO_DIR)
+            if config.UPLOAD_TO_YOUTUBE:
+                upload_video(config.HINDI_VIDEO_FILE, arts_2, title_prefix="News Shorts Hindi")
+
+        config.logger.info(f"🎬 Completed! Output folder: {config.OUTPUT_DIR}")
     except Exception as exc:
         config.logger.exception(f"Pipeline failed: {exc}")
         raise

@@ -49,15 +49,15 @@ An intelligent news aggregation and video generation system that creates engagin
 
 
 5. **Set up API credentials**
-   - Create a `.env` file in the project root
-   - Add your API keys:
+   - Create a `.env` file in the project root or define variables in your CI env.
+   - At minimum set your API keys:
      ```
     OPENAI_API_KEY=your_openai_api_key
     GOOGLE_API_KEY=your_google_api_key
     ELEVENLABS_API_KEY=your_elevenlabs_api_key  # optional
     ELEVENLABS_VOICE_ID=your_voice_id           # optional
      ```
-   - See `.env.example` for the required format
+   - See `.env.example` for the list of all configurable variables
 
 6. **Configure Google Cloud TTS**
    - Set up Google Cloud credentials
@@ -123,7 +123,48 @@ News is automatically categorized into:
 - Codec: H.264
 - Audio: AAC
 
-## 🚀 Usage
+### Environment Variables
+Most behaviour can be configured with env vars or a `.env` file. Important options include:
+- `GEN_AI_PROVIDER` chooses `openai` or `google` for script generation.
+- `TTS_PROVIDER` selects `openai`, `elevenlabs` or `google` for speech.
+- `VIDEO_LANGUAGES` sets which videos to make (e.g. `en,hi`).
+- `UPLOAD_TO_YOUTUBE` set `0` to skip uploading.
+- `OUTPUT_DIR` and `FILE_PREFIX` control where files are written.
+See `.env.example` for the full list. You can also pass these variables via the `env` section of `.github/workflows/daily.yml`.
+| Variable | Description | Default |
+| --- | --- | --- |
+| `OPENAI_API_KEY` | OpenAI API key | - |
+| `GOOGLE_API_KEY` | Google Generative AI key | - |
+| `GOOGLE_APPLICATION_CREDENTIALS` | Path to Google credentials JSON | - |
+| `ELEVENLABS_API_KEY` | ElevenLabs TTS key | - |
+| `ELEVENLABS_VOICE_ID` | ElevenLabs voice ID | - |
+| `GEN_AI_PROVIDER` | `openai` or `google` | `openai` |
+| `TTS_PROVIDER` | `openai`, `elevenlabs` or `google` | `openai` |
+| `TTS_MODEL` | OpenAI speech model | `tts-1-hd` |
+| `TTS_VOICE` | Voice name for OpenAI or ElevenLabs | `ash` |
+| `GOOGLE_TTS_LANGUAGE` | Google TTS language code | `en-US` |
+| `SPEEDUP` | Audio playback speed | `1.1` |
+| `VIDEO_LANGUAGES` | Languages to produce (`en`, `hi`) | `en,hi` |
+| `UPLOAD_TO_YOUTUBE` | Set `0` to skip uploading | `1` |
+| `FEED_LIMIT` | RSS items per source | `15` |
+| `OUTPUT_DIR` | Output folder | `output_v8_global` |
+| `FILE_PREFIX` | Prefix for generated files | `news_short_v8_global` |
+| `VIDEO_WIDTH` | Video width in pixels | `720` |
+| `VIDEO_HEIGHT` | Video height in pixels | `1280` |
+| `FONT` | Font family | `Arial` |
+| `FONT_SIZE` | Font size | `36` |
+| `TEXT_COLOR` | Overlay text color | `white` |
+| `BG_COLOR` | Background color | `blue` |
+| `FPS` | Frames per second | `24` |
+| `RETRY_LIMIT` | API retry attempts | `3` |
+| `YOUTUBE_CLIENT_ID` | OAuth client ID | - |
+| `YOUTUBE_CLIENT_SECRET` | OAuth client secret | - |
+| `YOUTUBE_PROJECT_ID` | Google Cloud project ID | - |
+| `YOUTUBE_AUTH_URI` | OAuth auth URI | - |
+| `YOUTUBE_TOKEN_URI` | OAuth token URI | - |
+| `YOUTUBE_AUTH_PROVIDER_X509_CERT_URL` | Cert URL | - |
+| `YOUTUBE_REDIRECT_URIS` | Allowed redirect URIs (comma separated) | - |
+| `YOUTUBE_TOKEN_JSON` | Path to stored token JSON | - |
 
 ### Basic Usage
 ```bash
@@ -139,8 +180,8 @@ python -m news_shorts
 6. **YouTube Upload**: Automatically uploads videos to YouTube
 
 ### Output
-- Main video: `output_v8_global/news_short_v8_global.mp4`
-- Hindi video: `output_v8_global/news_short_v8_global_hi.mp4`
+- Main video: `$OUTPUT_DIR/${FILE_PREFIX}.mp4`
+- Hindi video: `$OUTPUT_DIR/${FILE_PREFIX}_hi.mp4`
 
 ## ⚙️ Customization
 
