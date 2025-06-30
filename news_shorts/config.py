@@ -6,6 +6,22 @@ from dotenv import load_dotenv
 import json
 import tempfile
 
+
+def getenv_int(name: str, default: int) -> int:
+    """Return integer environment variable or default if unset/invalid."""
+    try:
+        return int(os.getenv(name) or default)
+    except ValueError:
+        return default
+
+
+def getenv_float(name: str, default: float) -> float:
+    """Return float environment variable or default if unset/invalid."""
+    try:
+        return float(os.getenv(name) or default)
+    except ValueError:
+        return default
+
 load_dotenv()
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
@@ -44,7 +60,7 @@ YOUTUBE_TOKEN_JSON = os.getenv("YOUTUBE_TOKEN_JSON")
 # TTS configuration
 TTS_MODEL = os.getenv("TTS_MODEL", "tts-1-hd")
 TTS_VOICE = os.getenv("TTS_VOICE", "ash")  # sarcastic Indian accent
-SPEEDUP = float(os.getenv("SPEEDUP", "1.1"))  # playback speedup
+SPEEDUP = getenv_float("SPEEDUP", 1.1)  # playback speedup
 
 SCOPES = ["https://www.googleapis.com/auth/youtube.upload"]
 CLIENT_SECRETS_FILE = os.path.join(tempfile.gettempdir(), "client_secrets.json")
@@ -111,7 +127,7 @@ RSS_SOURCES.update({
     "The Guardian": "https://www.theguardian.com/world/rss",
 })
 
-FEED_LIMIT = int(os.getenv("FEED_LIMIT", "15"))
+FEED_LIMIT = getenv_int("FEED_LIMIT", 15)
 
 OUTPUT_DIR = os.getenv("OUTPUT_DIR", "output_v8_global")
 FILE_PREFIX = os.getenv("FILE_PREFIX", "news_short_v8_global")
@@ -124,18 +140,18 @@ os.makedirs(AUDIO_DIR, exist_ok=True)
 os.makedirs(HINDI_AUDIO_DIR, exist_ok=True)
 
 VIDEO_SIZE = (
-    int(os.getenv("VIDEO_WIDTH", "720")),
-    int(os.getenv("VIDEO_HEIGHT", "1280")),
+    getenv_int("VIDEO_WIDTH", 720),
+    getenv_int("VIDEO_HEIGHT", 1280),
 )
 FONT = os.getenv("FONT", "Arial")
-FONT_SIZE = int(os.getenv("FONT_SIZE", "36"))
+FONT_SIZE = getenv_int("FONT_SIZE", 36)
 TEXT_COLOR = os.getenv("TEXT_COLOR", "white")
 BG_COLOR = os.getenv("BG_COLOR", "blue")
-FPS = int(os.getenv("FPS", "24"))
+FPS = getenv_int("FPS", 24)
 GOOGLE_TTS_LANGUAGE = os.getenv("GOOGLE_TTS_LANGUAGE", "en-US")
 
 # Retry configuration for API calls
-RETRY_LIMIT = int(os.getenv("RETRY_LIMIT", "3"))
+RETRY_LIMIT = getenv_int("RETRY_LIMIT", 3)
 
 
 def with_retry(func, *args, **kwargs):
