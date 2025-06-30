@@ -12,9 +12,24 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(me
 logger = logging.getLogger(__name__)
 
 OPENAI_KEY = os.getenv("OPENAI_API_KEY")
+GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 ELEVENLABS_API_KEY = os.getenv("ELEVENLABS_API_KEY")
 ELEVENLABS_VOICE_ID = os.getenv("ELEVENLABS_VOICE_ID")
-USE_ELEVENLABS = bool(ELEVENLABS_API_KEY and ELEVENLABS_VOICE_ID)
+
+# ---- Provider selection ----
+GEN_AI_PROVIDER = os.getenv("GEN_AI_PROVIDER", "openai").lower()
+if GEN_AI_PROVIDER == "google" and not GOOGLE_API_KEY:
+    GEN_AI_PROVIDER = "openai"
+
+TTS_PROVIDER = os.getenv("TTS_PROVIDER")
+if not TTS_PROVIDER:
+    TTS_PROVIDER = "elevenlabs" if ELEVENLABS_API_KEY and ELEVENLABS_VOICE_ID else "openai"
+TTS_PROVIDER = TTS_PROVIDER.lower()
+if TTS_PROVIDER == "elevenlabs" and not (ELEVENLABS_API_KEY and ELEVENLABS_VOICE_ID):
+    TTS_PROVIDER = "openai"
+
+USE_ELEVENLABS = TTS_PROVIDER == "elevenlabs"
+USE_GOOGLE_TTS = TTS_PROVIDER == "google"
 
 # YouTube credentials from environment
 YOUTUBE_CLIENT_ID = os.getenv("YOUTUBE_CLIENT_ID")
@@ -27,13 +42,17 @@ YOUTUBE_REDIRECT_URIS = os.getenv("YOUTUBE_REDIRECT_URIS")
 YOUTUBE_TOKEN_JSON = os.getenv("YOUTUBE_TOKEN_JSON")
 
 # TTS configuration
-TTS_MODEL = "tts-1-hd"
-TTS_VOICE = "ash"  # sarcastic Indian accent
-SPEEDUP = 1.1  # 10% faster pacing
+TTS_MODEL = os.getenv("TTS_MODEL", "tts-1-hd")
+TTS_VOICE = os.getenv("TTS_VOICE", "ash")  # sarcastic Indian accent
+SPEEDUP = float(os.getenv("SPEEDUP", "1.1"))  # playback speedup
 
 SCOPES = ["https://www.googleapis.com/auth/youtube.upload"]
 CLIENT_SECRETS_FILE = os.path.join(tempfile.gettempdir(), "client_secrets.json")
 TOKEN_FILE = os.path.join(tempfile.gettempdir(), "token.json")
+
+# Pipeline behaviour
+LANGUAGES = [l.strip().lower() for l in os.getenv("VIDEO_LANGUAGES", "en,hi").split(",") if l.strip()]
+UPLOAD_TO_YOUTUBE = os.getenv("UPLOAD_TO_YOUTUBE", "1") != "0"
 
 
 def write_client_secrets() -> None:
@@ -92,26 +111,31 @@ RSS_SOURCES.update({
     "The Guardian": "https://www.theguardian.com/world/rss",
 })
 
-FEED_LIMIT = 15
+FEED_LIMIT = int(os.getenv("FEED_LIMIT", "15"))
 
-OUTPUT_DIR = "output_v8_global"
+OUTPUT_DIR = os.getenv("OUTPUT_DIR", "output_v8_global")
+FILE_PREFIX = os.getenv("FILE_PREFIX", "news_short_v8_global")
 AUDIO_DIR = os.path.join(OUTPUT_DIR, "audio_segments")
 HINDI_AUDIO_DIR = os.path.join(OUTPUT_DIR, "audio_segments_hi")
-VIDEO_FILE = os.path.join(OUTPUT_DIR, "news_short_v8_global.mp4")
-HINDI_VIDEO_FILE = os.path.join(OUTPUT_DIR, "news_short_v8_global_hi.mp4")
+VIDEO_FILE = os.path.join(OUTPUT_DIR, f"{FILE_PREFIX}.mp4")
+HINDI_VIDEO_FILE = os.path.join(OUTPUT_DIR, f"{FILE_PREFIX}_hi.mp4")
 SUMMARY_FILE = os.path.join(OUTPUT_DIR, "daily_summary.mp4")
 os.makedirs(AUDIO_DIR, exist_ok=True)
 os.makedirs(HINDI_AUDIO_DIR, exist_ok=True)
 
-VIDEO_SIZE = (720, 1280)
-FONT = "Arial"
-FONT_SIZE = 36
-TEXT_COLOR = "white"
-BG_COLOR = "blue"
-FPS = 24
+VIDEO_SIZE = (
+    int(os.getenv("VIDEO_WIDTH", "720")),
+    int(os.getenv("VIDEO_HEIGHT", "1280")),
+)
+FONT = os.getenv("FONT", "Arial")
+FONT_SIZE = int(os.getenv("FONT_SIZE", "36"))
+TEXT_COLOR = os.getenv("TEXT_COLOR", "white")
+BG_COLOR = os.getenv("BG_COLOR", "blue")
+FPS = int(os.getenv("FPS", "24"))
+GOOGLE_TTS_LANGUAGE = os.getenv("GOOGLE_TTS_LANGUAGE", "en-US")
 
 # Retry configuration for API calls
-RETRY_LIMIT = 3
+RETRY_LIMIT = int(os.getenv("RETRY_LIMIT", "3"))
 
 
 def with_retry(func, *args, **kwargs):
