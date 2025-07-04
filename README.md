@@ -125,6 +125,7 @@ News is automatically categorized into:
 
 ### Environment Variables
 Most behaviour can be configured with env vars or a `.env` file. Important options include:
+- If a variable is set but left blank, the app falls back to its default value.
 - `GEN_AI_PROVIDER` chooses `openai` or `google` for script generation.
 - `TTS_PROVIDER` selects `openai`, `elevenlabs` or `google` for speech.
 - `VIDEO_LANGUAGES` sets which videos to make (e.g. `en,hi`).
