@@ -1,11 +1,10 @@
 import importlib
-import os
 import types
 
 import news_shorts.config as config
 
 
-def test_env_overrides(monkeypatch):
+def test_env_overrides(monkeypatch, fresh_config):
     monkeypatch.setenv("VIDEO_WIDTH", "800")
     monkeypatch.setenv("VIDEO_HEIGHT", "600")
     cfg = importlib.reload(config)

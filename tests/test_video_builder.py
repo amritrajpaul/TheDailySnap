@@ -1,6 +1,4 @@
-import os
 from news_shorts import video_builder as vb
-from news_shorts import tts_engine
 
 
 class DummyClip:
@@ -31,7 +29,6 @@ def dummy_audio(text, path):
 
 def test_build_video_creates_file(tmp_path, monkeypatch):
     out = tmp_path / 'out.mp4'
-    monkeypatch.setattr(tts_engine, 'generate_audio', dummy_audio)
     monkeypatch.setattr(vb, 'generate_audio', dummy_audio)
     monkeypatch.setattr(vb, 'AudioFileClip', lambda p: DummyClip())
     monkeypatch.setattr(vb, 'ImageClip', lambda *a, **k: DummyClip())

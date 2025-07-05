@@ -22,8 +22,7 @@ def fake_parse(url):
 
 def test_fetch_all_dedup(monkeypatch):
     monkeypatch.setattr(rss.feedparser, 'parse', fake_parse)
-    monkeypatch.setitem(config.RSS_SOURCES, 'A', 'url1')
-    monkeypatch.setitem(config.RSS_SOURCES, 'B', 'url2')
+    monkeypatch.setattr(config, 'RSS_SOURCES', {'A': 'url1', 'B': 'url2'})
     arts = rss.fetch_all(limit_per_feed=5)
     assert len(arts) == 2
     links = {a['link'] for a in arts}
