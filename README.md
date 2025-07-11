@@ -128,6 +128,7 @@ Most behaviour can be configured with env vars or a `.env` file. Important optio
 - If a variable is set but left blank, the app falls back to its default value.
 - `GEN_AI_PROVIDER` chooses `openai` or `google` for script generation.
 - `TTS_PROVIDER` selects `openai`, `elevenlabs` or `google` for speech.
+- `EMBED_PROVIDER` selects `openai` or `local` for article embeddings.
 - `VIDEO_LANGUAGES` sets which videos to make (e.g. `en,hi`).
 - `UPLOAD_TO_YOUTUBE` set `0` to skip uploading.
 - `OUTPUT_DIR` and `FILE_PREFIX` control where files are written.
@@ -143,6 +144,8 @@ See `.env.example` for the full list. You can also pass these variables via the 
 | `TTS_PROVIDER` | `openai`, `elevenlabs` or `google` | `openai` |
 | `TTS_MODEL` | OpenAI speech model | `tts-1-hd` |
 | `TTS_VOICE` | Voice name for OpenAI or ElevenLabs | `ash` |
+| `EMBED_PROVIDER` | `openai` or `local` | `openai` |
+| `LOCAL_EMBED_MODEL` | SentenceTransformer model name | `sentence-transformers/all-MiniLM-L6-v2` |
 | `GOOGLE_TTS_LANGUAGE` | Google TTS language code | `en-US` |
 | `SPEEDUP` | Audio playback speed | `1.1` |
 | `VIDEO_LANGUAGES` | Languages to produce (`en`, `hi`) | `en,hi` |

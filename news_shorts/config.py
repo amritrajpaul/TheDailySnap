@@ -53,6 +53,12 @@ if TTS_PROVIDER == "elevenlabs" and not (ELEVENLABS_API_KEY and ELEVENLABS_VOICE
 USE_ELEVENLABS = TTS_PROVIDER == "elevenlabs"
 USE_GOOGLE_TTS = TTS_PROVIDER == "google"
 
+# Embedding provider for filtering
+EMBED_PROVIDER = getenv_str("EMBED_PROVIDER", "openai").lower()
+LOCAL_EMBED_MODEL = getenv_str(
+    "LOCAL_EMBED_MODEL", "sentence-transformers/all-MiniLM-L6-v2"
+)
+
 # YouTube credentials from environment
 YOUTUBE_CLIENT_ID = os.getenv("YOUTUBE_CLIENT_ID")
 YOUTUBE_CLIENT_SECRET = os.getenv("YOUTUBE_CLIENT_SECRET")

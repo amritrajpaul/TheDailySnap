@@ -3,6 +3,7 @@ from typing import List, Dict
 import numpy as np
 import openai
 from . import config
+from . import local_llm
 
 Article = Dict[str, str]
 
@@ -14,10 +15,16 @@ def filter_stage1(articles: List[Article], top_k: int = 50) -> List[Article]:
     config.logger.info("Phase 1: Semantic filtering via embeddings")
     seed = "India politics commerce sports technology entertainment"
     texts = [seed] + [f"{a['title']} {a['summary']}" for a in articles]
-    resp = config.with_retry(openai.embeddings.create, model="text-embedding-ada-002", input=texts)
-    embs = resp.data
-    seed_emb = np.array(embs[0].embedding)
-    art_embs = np.array([e.embedding for e in embs[1:]])
+    if config.EMBED_PROVIDER == "local":
+        embs = local_llm.embed_texts(texts)
+        seed_emb = np.array(embs[0])
+        art_embs = np.array(embs[1:])
+    else:
+        resp = config.with_retry(
+            openai.embeddings.create, model="text-embedding-ada-002", input=texts
+        )
+        seed_emb = np.array(resp.data[0].embedding)
+        art_embs = np.array([e.embedding for e in resp.data[1:]])
     norms = np.linalg.norm(art_embs, axis=1) * np.linalg.norm(seed_emb)
     sims = (art_embs @ seed_emb) / norms
     idxs = np.argsort(-sims)[:top_k]
