@@ -292,3 +292,17 @@ Stay updated with the latest features and improvements by:
 ---
 
 **Note**: This application requires active API keys and internet connectivity to function properly. Ensure you have sufficient API credits before running the script. 
+
+## 🐳 Docker Deployment
+
+Build the Docker image:
+```bash
+docker build -t vyapar-backend .
+```
+
+Run the container exposing port 8000:
+```bash
+docker run -p 8000:8000 vyapar-backend
+```
+
+The application will be available at `http://localhost:8000/`.
